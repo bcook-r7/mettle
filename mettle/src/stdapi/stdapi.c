@@ -31,5 +31,14 @@ void tlv_register_stdapi(struct mettle *m, struct tlv_dispatcher *td)
 	add_handler("sys_config_getuid", sys_config_getuid);
 	add_handler("sys_config_sysinfo", sys_config_sysinfo);
 
+	// Process
 	add_handler("sys_process_get_processes", sys_process_get_processes);
+	add_handler("sys_process_attach", sys_process_attach);
+	add_handler("sys_process_close", sys_process_close);
+	add_handler("sys_process_execute", sys_process_execute);
+	add_handler("sys_process_kill", sys_process_kill);
+	add_handler("sys_process_get_processes", sys_process_get_processes);
+	add_handler("sys_process_getpid", sys_process_getpid);
+	add_handler("sys_process_get_info", sys_process_get_info);
+	add_handler("sys_process_wait", sys_process_wait);
 }
