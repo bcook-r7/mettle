@@ -22,7 +22,7 @@ sys_process_get_processes(struct tlv_handler_ctx *ctx)
 
 	struct tlv_packet *ret_packet;
 	int status, i;
-	uint32_t proc_arch=PROCESS_ARCH_X86;
+	uint32_t proc_arch = PROCESS_ARCH_X86;
 	sigar_t *sigar;
 	sigar_t *proc_sigar;
 	sigar_proc_list_t proclist;
@@ -169,28 +169,16 @@ sys_process_kill(struct tlv_handler_ctx *ctx)
 }
 
 /*
- * sends back a packet containing the current [meterpreter] pid
+ * sends back a packet containing the current PID
  */
 struct tlv_packet *
 sys_process_getpid(struct tlv_handler_ctx *ctx)
 {
+	struct mettle *m = ctx->arg;
+	sigar_t *sigar = mettle_get_sigar(m);
 
-	sigar_t *sigar;
-	sigar_pid_t s_pid;
-	sigar_pid_t nbo_s_pid;
-	struct tlv_packet *ret_packet;
-	sigar_open(&sigar);
-	s_pid=sigar_pid_get(sigar);
-	if (s_pid == 0) {
-		log_debug("in sys_process_get_info: sigar_pid_get returned %d", s_pid);
-		ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
-	} else {
-		nbo_s_pid = htonl(s_pid);
-		ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_SUCCESS);
-		ret_packet=tlv_packet_add_raw(ret_packet, TLV_TYPE_PID,
-				&nbo_s_pid, sizeof(s_pid));
-	}
-	return ret_packet;
+	struct tlv_packet *p = tlv_packet_response_result(ctx, TLV_RESULT_SUCCESS);
+	return tlv_packet_add_u32(p, TLV_TYPE_PID, sigar_pid_get(sigar));
 }
 
 /*
