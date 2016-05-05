@@ -28,8 +28,7 @@ hton_pid(sigar_pid_t pid)
 	else if (8 == sizeof(pid)) {
 		ret_pid=((((uint64_t)htonl((uint64_t)pid)) << 32)
 				+ htonl(((uint64_t)pid) >> 32));
-	}
-	else{
+	} else {
 		log_debug("unknown pid size");
 	}
 
@@ -57,11 +56,10 @@ sys_process_get_processes(struct tlv_handler_ctx *ctx)
 	ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
 	status = sigar_proc_list_get(sigar, &proclist);
 
-	if (status != SIGAR_OK){
+	if (status != SIGAR_OK) {
 		log_debug("proc_list error: %d (%s)\n",
 			   status, sigar_strerror(sigar, status));
-	}
-	else{
+	} else {
 		sigar_proc_cred_name_t uname_data;
 		sigar_pid_t pid, net_pid, net_ppid;
 		sigar_proc_state_t pstate;
@@ -70,27 +68,23 @@ sys_process_get_processes(struct tlv_handler_ctx *ctx)
 		struct tlv_packet *p;
 
 		parent = tlv_packet_response_result(ctx, TLV_RESULT_SUCCESS);
-		for (i=0; i<proclist.number; i++){
+		for (i = 0; i < proclist.number; i++) {
 			p = tlv_packet_new(TLV_TYPE_PROCESS_GROUP, 0);
 			pid = proclist.data[i];
-			status = sigar_proc_state_get(sigar, pid, &pstate);
-			if (status != SIGAR_OK){
-				log_debug("error: %d (%s) proc_state(%d)\n",
-					   status, sigar_strerror(sigar, status), pid);
-			}
-			else{
 
-				net_pid=hton_pid(pid);
-				net_ppid=hton_pid(pstate.ppid);
-				p=tlv_packet_add_raw(p, TLV_TYPE_PID,
-						&net_pid, sizeof(pid));
-				p=tlv_packet_add_raw(p, TLV_TYPE_PARENT_PID,
-						&net_ppid, sizeof(net_ppid));
-				p=tlv_packet_add_raw(p, TLV_TYPE_PROCESS_ARCH,
-						&proc_arch, sizeof(proc_arch));
-				p=tlv_packet_add_raw(p, TLV_TYPE_PROCESS_NAME,
-						pstate.name,
-						strnlen(pstate.name, SIGAR_PROC_NAME_LEN)+1);
+			status = sigar_proc_state_get(sigar, pid, &pstate);
+			if (status != SIGAR_OK) {
+				log_debug("error: %d (%s) proc_state(%d)\n",
+				    status, sigar_strerror(sigar, status), pid);
+			} else {
+				net_pid = hton_pid(pid);
+				net_ppid = hton_pid(pstate.ppid);
+				p = tlv_packet_add_raw(p, TLV_TYPE_PID, &net_pid, sizeof(pid));
+				p = tlv_packet_add_raw(p, TLV_TYPE_PARENT_PID, &net_ppid, sizeof(net_ppid));
+				p = tlv_packet_add_raw(p, TLV_TYPE_PROCESS_ARCH, &proc_arch, sizeof(proc_arch));
+				p = tlv_packet_add_raw(p, TLV_TYPE_PROCESS_NAME, pstate.name,
+					strnlen(pstate.name, SIGAR_PROC_NAME_LEN)+1);
+
 				/*
 				 * the path data comes from another sigar struct; try to get it for each
 				 * process and add the data if it is available to us
@@ -98,14 +92,12 @@ sys_process_get_processes(struct tlv_handler_ctx *ctx)
 				sigar_open(&proc_sigar);
 				status = sigar_proc_exe_get(proc_sigar, pid, &procexe);
 
-				if (status != SIGAR_OK){
-					p=tlv_packet_add_raw(p, TLV_TYPE_PROCESS_PATH,
+				if (status != SIGAR_OK) {
+					p = tlv_packet_add_raw(p, TLV_TYPE_PROCESS_PATH,
 							"PERMISSION DENIED", 18	);
-				}
-				else{
-					p=tlv_packet_add_raw(p, TLV_TYPE_PROCESS_PATH,
-							&procexe.name,
-							1+strnlen(procexe.name, SIGAR_PATH_MAX+1));
+				} else {
+					p = tlv_packet_add_raw(p, TLV_TYPE_PROCESS_PATH,
+						&procexe.name, 1 + strnlen(procexe.name, SIGAR_PATH_MAX+1));
 				}
 
 				/*
@@ -113,14 +105,13 @@ sys_process_get_processes(struct tlv_handler_ctx *ctx)
 				 * process and add the data if it is available to us
 				 */
 				status = sigar_proc_cred_name_get(sigar, pid, &uname_data);
-				if (status != SIGAR_OK){
+				if (status != SIGAR_OK) {
 					log_debug("error: %d (%s) proc_state(%d)\n",
-							status, sigar_strerror(sigar, status), pid);
-				}
-				else{
-					p=tlv_packet_add_raw(p, TLV_TYPE_USER_NAME,
-							uname_data.user, 1+strnlen(uname_data.user,
-									SIGAR_CRED_NAME_MAX));
+						status, sigar_strerror(sigar, status), pid);
+				} else {
+					p = tlv_packet_add_raw(p, TLV_TYPE_USER_NAME,
+						uname_data.user, 1+strnlen(uname_data.user,
+						SIGAR_CRED_NAME_MAX));
 				}
 
 				ret_packet=tlv_packet_add_child(parent, p);
@@ -188,15 +179,15 @@ sys_process_kill(struct tlv_handler_ctx *ctx)
 	int pid_len;
 	struct tlv_packet *ret_packet;
 
-	pid_ptr = (sigar_pid_t*)tlv_packet_get_raw(ctx->req, TLV_TYPE_PID, &pid_len);
-	hbo_pid=hton_pid(*pid_ptr);
-	status=sigar_proc_kill(hbo_pid, 9);
-	if (SIGAR_OK == status){
+	pid_ptr = tlv_packet_get_raw(ctx->req, TLV_TYPE_PID, &pid_len);
+	hbo_pid = hton_pid(*pid_ptr);
+	status = sigar_proc_kill(hbo_pid, 9);
+
+	if (SIGAR_OK == status) {
 		ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_SUCCESS);
-	}
-	else{
+	} else {
 		log_debug("sigar_proc_kill failed to kill pid %d; returned status %d",
-				hbo_pid, status);
+			hbo_pid, status);
 		ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
 	}
 	return ret_packet;
@@ -215,12 +206,11 @@ sys_process_getpid(struct tlv_handler_ctx *ctx)
 	struct tlv_packet *ret_packet;
 	sigar_open(&sigar);
 	s_pid=sigar_pid_get(sigar);
-	if (0 == s_pid){
+	if (0 == s_pid) {
 		log_debug("in sys_process_get_info: sigar_pid_get returned %d", s_pid);
 		ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
-	}
-	else{
-		nbo_s_pid=hton_pid(s_pid);
+	} else {
+		nbo_s_pid = hton_pid(s_pid);
 		ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_SUCCESS);
 		ret_packet=tlv_packet_add_raw(ret_packet, TLV_TYPE_PID,
 				&nbo_s_pid, sizeof(s_pid));
