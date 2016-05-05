@@ -99,46 +99,38 @@ sys_process_get_processes(struct tlv_handler_ctx *ctx)
 	return ret_packet;
 }
 /*
- * return a packet with a process handle if the OS is Windows-based
- * if the OS is not windows based, return ERROR_NOT_SUPPORTED
- * should be a wrapper for the open_process method in sigar
+ * return a packet with a process handle if the OS is Windows-based if the OS
+ * is not windows based, return ERROR_NOT_SUPPORTED should be a wrapper for the
+ * open_process method in sigar
  */
 struct tlv_packet *
 sys_process_attach(struct tlv_handler_ctx *ctx)
 {
-	struct tlv_packet *ret_packet =
-			tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
-	return ret_packet;
-
+	return tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
 }
 
 /*
- * close a process handle if the OS is Windows-based
- * and the pid provided is not the meterpreter pid
- * if the OS is not windows-based, (?)
- * No equivalent sigar method
+ * close a process handle if the OS is Windows-based and the pid provided is
+ * not the meterpreter pid if the OS is not windows-based, (?) No equivalent
+ * sigar method
  */
 struct tlv_packet *
 sys_process_close(struct tlv_handler_ctx *ctx)
 {
-	struct tlv_packet *ret_packet =
-			tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
-	return ret_packet;
-
+	return tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
 }
 
 /*
- * Starts a process on any OS
- * Multiple configuration options, including pipes, ptys, create suspended, etc
+ * Starts a process on any OS Multiple configuration options, including pipes,
+ * ptys, create suspended, etc
  */
 struct tlv_packet *
 sys_process_execute(struct tlv_handler_ctx *ctx)
 {
-	struct tlv_packet *ret_packet =
-			tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
-	return ret_packet;
+	return tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
 
 }
+
 /*
  * kills the process associated with the provided pid
  * should be a wrapper for sigar_proc_kill
@@ -148,24 +140,17 @@ sys_process_execute(struct tlv_handler_ctx *ctx)
 struct tlv_packet *
 sys_process_kill(struct tlv_handler_ctx *ctx)
 {
-	int status;
-	sigar_pid_t* pid_ptr;
-	sigar_pid_t hbo_pid;
-	int pid_len;
-	struct tlv_packet *ret_packet;
-
-	pid_ptr = tlv_packet_get_raw(ctx->req, TLV_TYPE_PID, &pid_len);
-	hbo_pid = htonl(*pid_ptr);
-	status = sigar_proc_kill(hbo_pid, 9);
-
-	if (status == SIGAR_OK) {
-		ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_SUCCESS);
-	} else {
-		log_debug("sigar_proc_kill failed to kill pid %d; returned status %d",
-			hbo_pid, status);
-		ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
+	uint32_t pid;
+	if (tlv_packet_get_u32(ctx->req, TLV_TYPE_PID, &pid)) {
+		return tlv_packet_response_result(ctx, TLV_RESULT_EINVAL);
 	}
-	return ret_packet;
+
+	int status = sigar_proc_kill(pid, 9);
+	if (status != SIGAR_OK) {
+		log_debug("sigar_proc_kill failed to kill pid %d; returned status %d",
+			pid, status);
+	}
+	return tlv_packet_response_result(ctx, sigar_to_tlv_status(status));
 }
 
 /*
@@ -189,10 +174,7 @@ sys_process_getpid(struct tlv_handler_ctx *ctx)
 struct tlv_packet *
 sys_process_get_info(struct tlv_handler_ctx *ctx)
 {
-	struct tlv_packet *ret_packet =
-			tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
-	return ret_packet;
-
+	return tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
 }
 
 /*
@@ -201,8 +183,5 @@ sys_process_get_info(struct tlv_handler_ctx *ctx)
  */
 struct tlv_packet *sys_process_wait(struct tlv_handler_ctx *ctx)
 {
-	struct tlv_packet *ret_packet =
-			tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
-	return ret_packet;
-
+	return tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
 }
