@@ -158,7 +158,7 @@ sys_process_kill(struct tlv_handler_ctx *ctx)
 	hbo_pid = htonl(*pid_ptr);
 	status = sigar_proc_kill(hbo_pid, 9);
 
-	if (SIGAR_OK == status) {
+	if (status == SIGAR_OK) {
 		ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_SUCCESS);
 	} else {
 		log_debug("sigar_proc_kill failed to kill pid %d; returned status %d",
@@ -181,7 +181,7 @@ sys_process_getpid(struct tlv_handler_ctx *ctx)
 	struct tlv_packet *ret_packet;
 	sigar_open(&sigar);
 	s_pid=sigar_pid_get(sigar);
-	if (0 == s_pid) {
+	if (s_pid == 0) {
 		log_debug("in sys_process_get_info: sigar_pid_get returned %d", s_pid);
 		ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
 	} else {
