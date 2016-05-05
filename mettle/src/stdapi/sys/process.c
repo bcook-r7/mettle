@@ -22,10 +22,10 @@ sigar_pid_t
 hton_pid(sigar_pid_t pid)
 {
 	sigar_pid_t ret_pid=0;
-	if (4==sizeof(pid)){
+	if (4 == sizeof(pid)) {
 		ret_pid=htonl(pid);
 	}
-	else if (8==sizeof(pid)){
+	else if (8 == sizeof(pid)) {
 		ret_pid=((((uint64_t)htonl((uint64_t)pid)) << 32)
 				+ htonl(((uint64_t)pid) >> 32));
 	}
@@ -47,29 +47,29 @@ sys_process_get_processes(struct tlv_handler_ctx *ctx)
 {
 
 	struct tlv_packet *ret_packet;
-    int status, i;
-    uint32_t proc_arch=PROCESS_ARCH_X86;
-    sigar_t *sigar;
-    sigar_t *proc_sigar;
-    sigar_proc_list_t proclist;
-    sigar_open(&sigar);
+	int status, i;
+	uint32_t proc_arch=PROCESS_ARCH_X86;
+	sigar_t *sigar;
+	sigar_t *proc_sigar;
+	sigar_proc_list_t proclist;
+	sigar_open(&sigar);
 
-    ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
-    status = sigar_proc_list_get(sigar, &proclist);
+	ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
+	status = sigar_proc_list_get(sigar, &proclist);
 
-    if (status != SIGAR_OK){
-    	log_debug("proc_list error: %d (%s)\n",
-               status, sigar_strerror(sigar, status));
-    }
-    else{
-    	sigar_proc_cred_name_t uname_data;
+	if (status != SIGAR_OK){
+		log_debug("proc_list error: %d (%s)\n",
+			   status, sigar_strerror(sigar, status));
+	}
+	else{
+		sigar_proc_cred_name_t uname_data;
 		sigar_pid_t pid, net_pid, net_ppid;
 		sigar_proc_state_t pstate;
 		sigar_proc_exe_t procexe;
-    	struct tlv_packet *parent;
-    	struct tlv_packet *p;
+		struct tlv_packet *parent;
+		struct tlv_packet *p;
 
-    	parent = tlv_packet_response_result(ctx, TLV_RESULT_SUCCESS);
+		parent = tlv_packet_response_result(ctx, TLV_RESULT_SUCCESS);
 		for (i=0; i<proclist.number; i++){
 			p = tlv_packet_new(TLV_TYPE_PROCESS_GROUP, 0);
 			pid = proclist.data[i];
@@ -95,7 +95,7 @@ sys_process_get_processes(struct tlv_handler_ctx *ctx)
 				 * the path data comes from another sigar struct; try to get it for each
 				 * process and add the data if it is available to us
 				 */
-			    sigar_open(&proc_sigar);
+				sigar_open(&proc_sigar);
 				status = sigar_proc_exe_get(proc_sigar, pid, &procexe);
 
 				if (status != SIGAR_OK){
@@ -124,12 +124,12 @@ sys_process_get_processes(struct tlv_handler_ctx *ctx)
 				}
 
 				ret_packet=tlv_packet_add_child(parent, p);
-			    sigar_close(proc_sigar);
+				sigar_close(proc_sigar);
 			}
 		}
-	    sigar_proc_list_destroy(sigar, &proclist);
-	    sigar_close(sigar);
-    }
+		sigar_proc_list_destroy(sigar, &proclist);
+		sigar_close(sigar);
+	}
 	return ret_packet;
 }
 /*
@@ -210,21 +210,21 @@ sys_process_getpid(struct tlv_handler_ctx *ctx)
 {
 
 	sigar_t *sigar;
-    sigar_pid_t s_pid;
-    sigar_pid_t nbo_s_pid;
-    struct tlv_packet *ret_packet;
-    sigar_open(&sigar);
-    s_pid=sigar_pid_get(sigar);
-    if (0 == s_pid){
-    	log_debug("in sys_process_get_info: sigar_pid_get returned %d", s_pid);
-    	ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
-    }
-    else{
-    	nbo_s_pid=hton_pid(s_pid);
-    	ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_SUCCESS);
-    	ret_packet=tlv_packet_add_raw(ret_packet, TLV_TYPE_PID,
-    			&nbo_s_pid, sizeof(s_pid));
-    }
+	sigar_pid_t s_pid;
+	sigar_pid_t nbo_s_pid;
+	struct tlv_packet *ret_packet;
+	sigar_open(&sigar);
+	s_pid=sigar_pid_get(sigar);
+	if (0 == s_pid){
+		log_debug("in sys_process_get_info: sigar_pid_get returned %d", s_pid);
+		ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
+	}
+	else{
+		nbo_s_pid=hton_pid(s_pid);
+		ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_SUCCESS);
+		ret_packet=tlv_packet_add_raw(ret_packet, TLV_TYPE_PID,
+				&nbo_s_pid, sizeof(s_pid));
+	}
 	return ret_packet;
 }
 
