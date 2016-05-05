@@ -150,6 +150,39 @@ char *tlv_packet_get_str(struct tlv_packet *p, uint32_t value_type)
 	return tlv_packet_get_buf_str(val, len);
 }
 
+int tlv_packet_get_u16(struct tlv_packet *p, uint32_t value_type, uint16_t *value)
+{
+	size_t len;
+	char *buf = tlv_packet_get_raw(p, value_type, &len);
+	if (!buf || len != 2)
+		return -1;
+
+	*value = ntohs(*(uint16_t *)(buf));
+	return 0;
+}
+
+int tlv_packet_get_u32(struct tlv_packet *p, uint32_t value_type, uint32_t *value)
+{
+	size_t len;
+	char *buf = tlv_packet_get_raw(p, value_type, &len);
+	if (!buf || len != 2)
+		return -1;
+
+	*value = ntohl(*(uint32_t *)(buf));
+	return 0;
+}
+
+int tlv_packet_get_u64(struct tlv_packet *p, uint32_t value_type, uint64_t *value)
+{
+	size_t len;
+	char *buf = tlv_packet_get_raw(p, value_type, &len);
+	if (!buf || len != 8)
+		return -1;
+
+	*value = dnet_ntohll(*(uint64_t *)(buf));
+	return 0;
+}
+
 struct tlv_packet * tlv_packet_add_child_raw(struct tlv_packet *p,
 		const void *val, size_t len)
 {
