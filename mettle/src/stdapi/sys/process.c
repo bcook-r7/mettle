@@ -10,31 +10,6 @@
 #include "log.h"
 #include "tlv.h"
 
-
-/*
- * takes a sigar_pid_t in host byte order and returns it in network byte order
- * because sigar_pid_t can be 32 or 64-bit, regular htonl will not work
- *
- * to do: implement the pids in such a way that htonll works for all.
- * unfortunately, it looks like framework defaults to sending a 4-byte value for the pid.
- */
-sigar_pid_t
-hton_pid(sigar_pid_t pid)
-{
-	sigar_pid_t ret_pid=0;
-	if (4 == sizeof(pid)) {
-		ret_pid=htonl(pid);
-	}
-	else if (8 == sizeof(pid)) {
-		ret_pid=((((uint64_t)htonl((uint64_t)pid)) << 32)
-				+ htonl(((uint64_t)pid) >> 32));
-	} else {
-		log_debug("unknown pid size");
-	}
-
-	return ret_pid;
-}
-
 /*
  * use sigar to create a process list and add the data to the response packet
  *
@@ -77,8 +52,8 @@ sys_process_get_processes(struct tlv_handler_ctx *ctx)
 				log_debug("error: %d (%s) proc_state(%d)\n",
 				    status, sigar_strerror(sigar, status), pid);
 			} else {
-				net_pid = hton_pid(pid);
-				net_ppid = hton_pid(pstate.ppid);
+				net_pid = htonl(pid);
+				net_ppid = htonl(pstate.ppid);
 				p = tlv_packet_add_raw(p, TLV_TYPE_PID, &net_pid, sizeof(pid));
 				p = tlv_packet_add_raw(p, TLV_TYPE_PARENT_PID, &net_ppid, sizeof(net_ppid));
 				p = tlv_packet_add_raw(p, TLV_TYPE_PROCESS_ARCH, &proc_arch, sizeof(proc_arch));
@@ -180,7 +155,7 @@ sys_process_kill(struct tlv_handler_ctx *ctx)
 	struct tlv_packet *ret_packet;
 
 	pid_ptr = tlv_packet_get_raw(ctx->req, TLV_TYPE_PID, &pid_len);
-	hbo_pid = hton_pid(*pid_ptr);
+	hbo_pid = htonl(*pid_ptr);
 	status = sigar_proc_kill(hbo_pid, 9);
 
 	if (SIGAR_OK == status) {
@@ -210,7 +185,7 @@ sys_process_getpid(struct tlv_handler_ctx *ctx)
 		log_debug("in sys_process_get_info: sigar_pid_get returned %d", s_pid);
 		ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
 	} else {
-		nbo_s_pid = hton_pid(s_pid);
+		nbo_s_pid = htonl(s_pid);
 		ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_SUCCESS);
 		ret_packet=tlv_packet_add_raw(ret_packet, TLV_TYPE_PID,
 				&nbo_s_pid, sizeof(s_pid));
