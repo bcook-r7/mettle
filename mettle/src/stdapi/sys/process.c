@@ -10,93 +10,92 @@
 #include "log.h"
 #include "tlv.h"
 
+static struct tlv_packet *
+get_process_info(sigar_t *sigar, sigar_pid_t pid)
+{
+	sigar_proc_state_t pstate;
+	int status = sigar_proc_state_get(sigar, pid, &pstate);
+	if (status != SIGAR_OK) {
+		log_debug("error: %d (%s) proc_state(%d)\n",
+		    status, sigar_strerror(sigar, status), pid);
+		return NULL;
+	}
+
+	struct tlv_packet *p = tlv_packet_new(TLV_TYPE_PROCESS_GROUP, 0);
+
+	p = tlv_packet_add_u32(p, TLV_TYPE_PID, pid);
+	p = tlv_packet_add_u32(p, TLV_TYPE_PARENT_PID, pstate.ppid);
+	p = tlv_packet_add_str(p, TLV_TYPE_PROCESS_NAME, pstate.name);
+
+	/*
+	 * XXX Implement process architecture in libsigar
+	 */
+	p = tlv_packet_add_u32(p, TLV_TYPE_PROCESS_ARCH, PROCESS_ARCH_X86);
+
+	/*
+	 * the path data comes from another sigar struct; try to get it for each
+	 * process and add the data if it is available to us
+	 */
+	sigar_proc_exe_t procexe;
+	status = sigar_proc_exe_get(sigar, pid, &procexe);
+	if (status == SIGAR_OK) {
+		p = tlv_packet_add_str(p, TLV_TYPE_PROCESS_PATH, procexe.name);
+	} else {
+		log_debug("error: %d (%s) proc_exe(%d)\n",
+		    status, sigar_strerror(sigar, status), pid);
+	}
+
+	/*
+	 * the username data comes from another sigar struct; try to get it for each
+	 * process and add the data if it is available to us
+	 */
+	sigar_proc_cred_name_t uname_data;
+	status = sigar_proc_cred_name_get(sigar, pid, &uname_data);
+	if (status == SIGAR_OK) {
+		p = tlv_packet_add_str(p, TLV_TYPE_USER_NAME, uname_data.user);
+	} else {
+		log_debug("error: %d (%s) proc_state(%d)\n",
+		    status, sigar_strerror(sigar, status), pid);
+	}
+
+	return p;
+}
+
+static inline int sigar_to_tlv_status(int rc)
+{
+	return rc == SIGAR_OK ? TLV_RESULT_SUCCESS : TLV_RESULT_FAILURE;
+}
+
 /*
  * use sigar to create a process list and add the data to the response packet
  *
- * to do: build in the ability to query each process's architecture
+ * XXX: build in the ability to query each process's architecture
  */
-
 struct tlv_packet *
 sys_process_get_processes(struct tlv_handler_ctx *ctx)
 {
+	struct mettle *m = ctx->arg;
+	sigar_t *sigar = mettle_get_sigar(m);
 
-	struct tlv_packet *ret_packet;
-	int status, i;
-	uint32_t proc_arch = PROCESS_ARCH_X86;
-	sigar_t *sigar;
-	sigar_t *proc_sigar;
-	sigar_proc_list_t proclist;
-	sigar_open(&sigar);
-
-	ret_packet = tlv_packet_response_result(ctx, TLV_RESULT_FAILURE);
-	status = sigar_proc_list_get(sigar, &proclist);
+	sigar_proc_list_t processes;
+	int status = sigar_proc_list_get(sigar, &processes);
 
 	if (status != SIGAR_OK) {
 		log_debug("proc_list error: %d (%s)\n",
 			   status, sigar_strerror(sigar, status));
-	} else {
-		sigar_proc_cred_name_t uname_data;
-		sigar_pid_t pid, net_pid, net_ppid;
-		sigar_proc_state_t pstate;
-		sigar_proc_exe_t procexe;
-		struct tlv_packet *parent;
-		struct tlv_packet *p;
-
-		parent = tlv_packet_response_result(ctx, TLV_RESULT_SUCCESS);
-		for (i = 0; i < proclist.number; i++) {
-			p = tlv_packet_new(TLV_TYPE_PROCESS_GROUP, 0);
-			pid = proclist.data[i];
-
-			status = sigar_proc_state_get(sigar, pid, &pstate);
-			if (status != SIGAR_OK) {
-				log_debug("error: %d (%s) proc_state(%d)\n",
-				    status, sigar_strerror(sigar, status), pid);
-			} else {
-				net_pid = htonl(pid);
-				net_ppid = htonl(pstate.ppid);
-				p = tlv_packet_add_raw(p, TLV_TYPE_PID, &net_pid, sizeof(pid));
-				p = tlv_packet_add_raw(p, TLV_TYPE_PARENT_PID, &net_ppid, sizeof(net_ppid));
-				p = tlv_packet_add_raw(p, TLV_TYPE_PROCESS_ARCH, &proc_arch, sizeof(proc_arch));
-				p = tlv_packet_add_raw(p, TLV_TYPE_PROCESS_NAME, pstate.name,
-					strnlen(pstate.name, SIGAR_PROC_NAME_LEN)+1);
-
-				/*
-				 * the path data comes from another sigar struct; try to get it for each
-				 * process and add the data if it is available to us
-				 */
-				sigar_open(&proc_sigar);
-				status = sigar_proc_exe_get(proc_sigar, pid, &procexe);
-
-				if (status != SIGAR_OK) {
-					p = tlv_packet_add_raw(p, TLV_TYPE_PROCESS_PATH,
-							"PERMISSION DENIED", 18	);
-				} else {
-					p = tlv_packet_add_raw(p, TLV_TYPE_PROCESS_PATH,
-						&procexe.name, 1 + strnlen(procexe.name, SIGAR_PATH_MAX+1));
-				}
-
-				/*
-				 * the username data comes from another sigar struct; try to get it for each
-				 * process and add the data if it is available to us
-				 */
-				status = sigar_proc_cred_name_get(sigar, pid, &uname_data);
-				if (status != SIGAR_OK) {
-					log_debug("error: %d (%s) proc_state(%d)\n",
-						status, sigar_strerror(sigar, status), pid);
-				} else {
-					p = tlv_packet_add_raw(p, TLV_TYPE_USER_NAME,
-						uname_data.user, 1+strnlen(uname_data.user,
-						SIGAR_CRED_NAME_MAX));
-				}
-
-				ret_packet=tlv_packet_add_child(parent, p);
-				sigar_close(proc_sigar);
-			}
-		}
-		sigar_proc_list_destroy(sigar, &proclist);
-		sigar_close(sigar);
+		return tlv_packet_response_result(ctx, sigar_to_tlv_status(status));
 	}
-	return ret_packet;
+
+	struct tlv_packet *p = tlv_packet_response_result(ctx, TLV_RESULT_SUCCESS);
+	for (int i = 0; i < processes.number; i++) {
+		struct tlv_packet *proc_info = get_process_info(sigar, processes.data[i]);
+		if (proc_info) {
+			p = tlv_packet_add_child(p, proc_info);
+		}
+	}
+	sigar_proc_list_destroy(sigar, &processes);
+
+	return p;
 }
 /*
  * return a packet with a process handle if the OS is Windows-based if the OS
