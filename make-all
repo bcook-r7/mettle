@@ -12,10 +12,9 @@ for i in \
 	powerpc64le-linux-musl \
 	mips-linux-muslsf \
 	mipsel-linux-muslsf \
+	mips64-linux-muslsf \
 	; do
 	echo Building target $i
 	make TARGET=$i;
 done
 
-# XXX Need updated elf2bin
-# mips64-linux-muslsf \

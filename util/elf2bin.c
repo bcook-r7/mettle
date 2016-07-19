@@ -14,22 +14,29 @@
 #include "elf.h"
 
 
-#define MAP(BIG,SMALL) \
-	for(ii = 0; ii < SMALL(ehdr->e_phnum); ii++, phdr++) { \
-		if(BIG(phdr->p_type) == PT_LOAD) { \
-			source = data + BIG(phdr->p_offset); \
-			dest = mapping + BIG(phdr->p_vaddr); \
-			len = BIG(phdr->p_filesz); \
+#define MAP(LONG,INT,SHORT) \
+	for(ii = 0; ii < SHORT(ehdr->e_phnum); ii++, phdr++) { \
+		if(INT(phdr->p_type) == PT_LOAD) { \
+			source = data + LONG(phdr->p_offset); \
+			dest = mapping + LONG(phdr->p_vaddr); \
+			len = LONG(phdr->p_filesz); \
 			printf("memcpy(%p, %p, %08zx)\n", dest, source, len); \
 			memcpy(dest, source, len); \
-			used = BIG(phdr->p_memsz) + BIG(phdr->p_vaddr); \
+			used = LONG(phdr->p_memsz) + LONG(phdr->p_vaddr); \
 		} \
 	}
 
 #define NOP(T) T
 
-#define MAP_LE MAP(NOP,NOP)
-#define MAP_BE MAP(ntohl,ntohs)
+#define MAP_LE MAP(NOP,NOP,NOP)
+#define MAP_BE MAP(ntohl,ntohl,ntohs)
+#define MAP_BE64 MAP(bswap64,ntohl,ntohs)
+
+unsigned long bswap64(unsigned long x)
+{
+	return (x << 56) | (x << 40 & 0xff000000000000UL) | (x << 24 & 0xff0000000000UL) | (x << 8 & 0xff00000000UL) |
+		(x >> 8 & 0xff000000UL) | (x >> 24 & 0xff0000UL) | (x >> 40 & 0xff00UL) | (x >> 56);
+}
 
 int main(int argc, char **argv)
 {
@@ -95,8 +102,8 @@ int main(int argc, char **argv)
 		if (arch->e_ident[EI_DATA] == ELFDATA2LSB) {
 			MAP_LE
 		} else {
-			printf("Cannot do big-endian and 64-bit, sorry\n");
-			exit(EXIT_FAILURE);
+			phdr = (Elf64_Phdr *)(data + bswap64(ehdr->e_phoff));
+			MAP_BE64
 		}
 	}
 
