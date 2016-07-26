@@ -16,5 +16,6 @@ for i in \
 	; do
 	echo Building target $i
 	make TARGET=$i;
+	make TARGET=$i install;
 done
 
