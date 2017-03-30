@@ -18,7 +18,7 @@ ifneq (,$(findstring musl,$(TARGET)))
 endif
 
 $(ROOT)/mettle/configure: $(ROOT)/mettle/configure.ac
-	mkdir -p $(BUILD)
+	@mkdir -p $(BUILD)
 	@cd $(ROOT)/mettle; \
 		autoreconf -i $(LOGBUILD)
 
@@ -48,8 +48,8 @@ DATADIR:=../metasploit-framework/data
 METTLEDIR:=$(DATADIR)/mettle
 
 install: mettle
-	mkdir -p $(METTLEDIR)/$(TARGET_BUILD_DIR)/bin/
-	cp build/$(TARGET_BUILD_DIR)/bin/mettle* $(METTLEDIR)/$(TARGET_BUILD_DIR)/bin/
+	@mkdir -p $(METTLEDIR)/$(TARGET_BUILD_DIR)/bin/
+	@cp build/$(TARGET_BUILD_DIR)/bin/mettle* $(METTLEDIR)/$(TARGET_BUILD_DIR)/bin/
 
 uninstall:
-	rm -rf $(METTLEDIR)/$(TARGET_BUILD_DIR)
+	@rm -rf $(METTLEDIR)/$(TARGET_BUILD_DIR)

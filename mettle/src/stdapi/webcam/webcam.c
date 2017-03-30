@@ -15,13 +15,7 @@
 #include "channel.h"
 #include "log.h"
 #include "tlv.h"
-
-#if HAVE_WEBCAM
-extern struct tlv_packet *webcam_list(struct tlv_handler_ctx *ctx);
-extern struct tlv_packet *webcam_start(struct tlv_handler_ctx *ctx);
-extern struct tlv_packet *webcam_stop(struct tlv_handler_ctx *ctx);
-extern struct tlv_packet *webcam_get_frame(struct tlv_handler_ctx *ctx);
-#endif
+#include "webcam.h"
 
 void webcam_register_handlers(struct mettle *m)
 {

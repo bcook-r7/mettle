@@ -1,11 +1,7 @@
-
-#include <TargetConditionals.h>
-
-#if TARGET_OS_OSX
-
 #import <AVFoundation/AVFoundation.h>
 
 #include "tlv.h"
+#include "ui.h"
 
 struct tlv_packet *desktop_screenshot(struct tlv_handler_ctx *ctx)
 {
@@ -31,4 +27,3 @@ struct tlv_packet *desktop_screenshot(struct tlv_handler_ctx *ctx)
   }
   return p;
 }
-#endif

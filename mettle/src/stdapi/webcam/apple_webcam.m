@@ -7,6 +7,7 @@
 #endif
 
 #include "tlv.h"
+#include "webcam.h"
 
 #define TLV_TYPE_WEBCAM_IMAGE          (TLV_META_TYPE_RAW     | TLV_EXTENSIONS + 1)
 #define TLV_TYPE_WEBCAM_INTERFACE_ID   (TLV_META_TYPE_UINT    | TLV_EXTENSIONS + 2)
@@ -57,7 +58,7 @@
   AVCaptureDevice *device = devices[deviceIndex - 1];
 
   NSError* error = nil;
-  AVCaptureDeviceInput* input = 
+  AVCaptureDeviceInput* input =
     [AVCaptureDeviceInput deviceInputWithDevice: device  error: &error];
   [session addInput:input];
 
@@ -104,7 +105,7 @@
 #else
     CIImage* ciImage = [CIImage imageWithCVImageBuffer: head];
     NSBitmapImageRep* bitmapRep = [[NSBitmapImageRep alloc] initWithCIImage: ciImage];
-    NSDictionary *props = [NSDictionary dictionary]; 
+    NSDictionary *props = [NSDictionary dictionary];
     return [bitmapRep representationUsingType:NSJPEGFileType properties: props];
 #endif
   }
@@ -113,7 +114,7 @@
 
 - (void) captureOutput: (AVCaptureOutput*) output
   didOutputSampleBuffer: (CMSampleBufferRef) buffer
-         fromConnection: (AVCaptureConnection*) connection 
+         fromConnection: (AVCaptureConnection*) connection
 {
   CVImageBufferRef frame = CMSampleBufferGetImageBuffer(buffer);
   CVImageBufferRef prev;
@@ -175,7 +176,7 @@ struct tlv_packet *webcam_list(struct tlv_handler_ctx *ctx)
   struct tlv_packet *p = tlv_packet_response_result(ctx, TLV_RESULT_SUCCESS);
   NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
   for (AVCaptureDevice *device in devices) {
-    const char *webcam_str = (const char *)[[device localizedName]cStringUsingEncoding:NSUTF8StringEncoding]; 
+    const char *webcam_str = (const char *)[[device localizedName]cStringUsingEncoding:NSUTF8StringEncoding];
     p = tlv_packet_add_str(p, TLV_TYPE_WEBCAM_NAME, webcam_str);
   }
   return p;

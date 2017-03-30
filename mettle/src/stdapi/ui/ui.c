@@ -15,10 +15,7 @@
 #include "channel.h"
 #include "log.h"
 #include "tlv.h"
-
-#if __APPLE__
-#include <TargetConditionals.h>
-#endif
+#include "ui.h"
 
 struct tlv_packet *desktop_screenshot(struct tlv_handler_ctx *ctx);
 

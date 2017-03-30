@@ -39,6 +39,8 @@ endif
 libmettle_la_SOURCES += util.c
 if HOST_APPLE
 libmettle_la_SOURCES += stdapi/webcam/apple_webcam.m
+endif
+if HOST_OSX
 libmettle_la_SOURCES += stdapi/ui/osx_desktop.m
 endif
 if HOST_LINUX

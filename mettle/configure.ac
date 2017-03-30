@@ -20,15 +20,15 @@ case $host_os in
 		OBJCFLAGS="$OBJCFLAGS -fobjc-arc"
 		AC_DEFINE(HAVE_WEBCAM)
 		AC_SUBST([PLATFORM_LDADD], ['-framework CoreMedia -framework CoreImage -framework AVFoundation -framework ImageIO'])
-		# Include things here for macOS and not iOS, and vice-versa
-		# There is probably a better iOS check
-		AC_CHECK_HEADER([arpa/telnet.h],
-			[
-			AC_DEFINE(HAVE_DESKTOP_SCREENSHOT)
-			AC_SUBST([PLATFORM_LDADD], ["$PLATFORM_LDADD -framework Cocoa"])
-			],
-			[
-			])
+		AC_EGREP_CPP(yes,
+			[#import <TargetConditionals.h>
+			 #if TARGET_OS_OSX
+			 yes
+			 #endif],
+			[HOST_OS=osx
+			 AC_DEFINE(HAVE_DESKTOP_SCREENSHOT)
+			 AC_SUBST([PLATFORM_LDADD], ["$PLATFORM_LDADD -framework Cocoa"])],
+			[HOST_OS=ios])
 		;;
 	*linux*)
 		HOST_OS=linux
@@ -46,9 +46,11 @@ case $host_os in
 		;;
 esac
 
-AM_CONDITIONAL([HOST_LINUX],     [test x$HOST_OS = xlinux])
+AM_CONDITIONAL([HOST_IOS],     [test x$HOST_OS = xios])
+AM_CONDITIONAL([HOST_OSX],     [test x$HOST_OS = xosx])
+AM_CONDITIONAL([HOST_APPLE],   [test x$HOST_OS = xios -o x$HOST_OS = xosx])
+AM_CONDITIONAL([HOST_LINUX],   [test x$HOST_OS = xlinux])
 AM_CONDITIONAL([HOST_WIN],     [test x$HOST_OS = xwin])
-AM_CONDITIONAL([HOST_APPLE],     [test x$HOST_OS = xapple])
 
 CHECK_LIBC_COMPAT
 
