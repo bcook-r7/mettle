@@ -27,6 +27,7 @@ case $host_os in
 			 #endif],
 			[HOST_OS=osx
 			 AC_DEFINE(HAVE_DESKTOP_SCREENSHOT)
+			 AC_DEFINE(HAVE_CLIPBOARD)
 			 AC_SUBST([PLATFORM_LDADD], ["$PLATFORM_LDADD -framework Cocoa"])],
 			[HOST_OS=ios])
 		;;
