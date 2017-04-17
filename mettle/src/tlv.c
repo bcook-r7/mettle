@@ -28,17 +28,17 @@ struct tlv_xor_header {
 	uint32_t xor_key;
 	int32_t len;
 	uint32_t type;
-};
+} __attribute__((packed));
 
 struct tlv_header {
 	int32_t len;
 	uint32_t type;
-};
+} __attribute__((packed));
 
 struct tlv_packet {
 	struct tlv_header h;
 	char buf[];
-};
+} __attribute__((packed));
 
 static uint32_t tlv_xor_key(void)
 {
