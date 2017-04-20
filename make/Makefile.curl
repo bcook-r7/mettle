@@ -1,4 +1,4 @@
-LIBCURL_VERSION=7.53.1
+LIBCURL_VERSION=7.54.0
 
 $(BUILD)/lib/libcurl.a: build/tools \
 	$(BUILD)/lib/libmbedtls.a \
