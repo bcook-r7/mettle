@@ -91,13 +91,13 @@
       return nil;
     }
 #if TARGET_OS_IPHONE
-    CIImage *ciImage = [CIImage imageWithCVPixelBuffer:head];
+    CIImage *ciImage = [[CIImage imageWithCVPixelBuffer:head] imageByApplyingOrientation:6];
     CIContext *temporaryContext = [CIContext contextWithOptions:nil];
     CGImageRef videoImage = [temporaryContext
       createCGImage:ciImage
            fromRect:CGRectMake(0, 0,
-               CVPixelBufferGetWidth(head),
-               CVPixelBufferGetHeight(head))];
+               CVPixelBufferGetHeight(head),
+               CVPixelBufferGetWidth(head))];
     UIImage *uiImage = [[UIImage alloc] initWithCGImage:videoImage];
     NSData* frame = UIImageJPEGRepresentation(uiImage, 1.0);
     CGImageRelease(videoImage);
