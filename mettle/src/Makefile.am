@@ -26,6 +26,7 @@ libmettle_la_SOURCES += http_client.c
 libmettle_la_SOURCES += log.c
 libmettle_la_SOURCES += network_client.c
 libmettle_la_SOURCES += network_server.c
+libmettle_la_SOURCES += service.c
 libmettle_la_SOURCES += tlv.c
 libmettle_la_SOURCES += stdapi/stdapi.c
 libmettle_la_SOURCES += stdapi/webcam/webcam.c

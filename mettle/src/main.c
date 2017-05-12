@@ -15,6 +15,7 @@
 #include "argv_split.h"
 #include "log.h"
 #include "mettle.h"
+#include "service.h"
 
 static void usage(const char *name)
 {
@@ -24,6 +25,7 @@ static void usage(const char *name)
 	printf("  -U, --uuid [uuid] set the UUID (base64)\n");
 	printf("  -d, --debug       enable debug output\n");
 	printf("  -o, --out [file]  write debug output to a file\n");
+	printf("  -b, --background  start as a background service\n");
 	printf("\n");
 	exit(1);
 }
@@ -49,11 +51,13 @@ static int parse_cmdline(int argc, char * const argv[], struct mettle *m)
 		{"out", required_argument, NULL, 'o'},
 		{"uri", required_argument, NULL, 'u'},
 		{"uuid", required_argument, NULL, 'U'},
+		{"background", no_argument, NULL, 'b'},
 		{ 0, 0, NULL, 0 }
 	};
-	const char *short_options = "hu:U:do:";
+	const char *short_options = "hu:U:do:b";
 	const char *out = NULL;
 	bool debug = false;
+	bool background = false;
 	int log_level = 0;
 
 	/*
@@ -73,6 +77,9 @@ static int parse_cmdline(int argc, char * const argv[], struct mettle *m)
 			debug = true;
 			log_set_level(++log_level);
 			break;
+		case 'b':
+			background = true;
+			break;
 		case 'o':
 			out = optarg;
 			break;
@@ -84,6 +91,10 @@ static int parse_cmdline(int argc, char * const argv[], struct mettle *m)
 
 	if (debug) {
 		start_logger(out);
+	}
+
+	if (background) {
+		start_service();
 	}
 
 	return 0;
