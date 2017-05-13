@@ -53,6 +53,8 @@ module MetasploitPayloads
         'u'
       when :uuid
         'U'
+      when :background
+        'b'
       when :debug
         'd'
       when :log_file
