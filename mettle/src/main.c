@@ -127,6 +127,10 @@ void parse_default_args(struct mettle *m)
 		"                                                               "
 		"                                                               "
 		"                                                               "
+		"                                                               "
+		"                                                               "
+		"                                                               "
+		"                                                               "
 		"                                                               ";
 
 	if (strncasecmp(default_opts, "default_opts", strlen("default_opts"))) {
