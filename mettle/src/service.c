@@ -5,13 +5,6 @@
 
 #include "service.h"
 
-#ifdef _WIN32
-
-int start_service(void)
-{}
-
-#else
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -68,5 +61,3 @@ int start_service(void)
 
 	return 0;
 }
-
-#endif

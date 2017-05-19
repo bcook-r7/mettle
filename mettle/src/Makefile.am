@@ -26,7 +26,6 @@ libmettle_la_SOURCES += http_client.c
 libmettle_la_SOURCES += log.c
 libmettle_la_SOURCES += network_client.c
 libmettle_la_SOURCES += network_server.c
-libmettle_la_SOURCES += service.c
 libmettle_la_SOURCES += tlv.c
 libmettle_la_SOURCES += stdapi/stdapi.c
 libmettle_la_SOURCES += stdapi/webcam/webcam.c
@@ -34,8 +33,10 @@ if HOST_WIN
 libmettle_la_SOURCES += inet_ntop.c inet_pton.c
 libmettle_la_SOURCES += posix_win.c
 libmettle_la_SOURCES += process_win.c
+libmettle_la_SOURCES += service_win.c
 else
 libmettle_la_SOURCES += process.c
+libmettle_la_SOURCES += service.c
 endif
 libmettle_la_SOURCES += util.c
 if HOST_APPLE
